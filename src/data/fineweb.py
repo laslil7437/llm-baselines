@@ -79,7 +79,8 @@ def get_fineweb10_data(num_proc=40):
     breakpoint()
 
 
-    dump_folder_names = os.listdir(FINEWEB10_DATA_PATH)
+    dump_folder_names = os.listdir(FINEWEB10_DATA_PATH) 
+    # 95 dumps
 
     # all_train_data = []
     # all_val_data = []
