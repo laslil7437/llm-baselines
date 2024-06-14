@@ -32,7 +32,7 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_openwebtext2_data()
     if args.dataset == "slimpajama":
         return get_slimpajama_data()
-    if args.dataset == "fineweb":
+    if args.dataset == "fineweb10":
         return get_fineweb10_data()
     else:
         raise NotImplementedError(f"Unknow dataset key '{args.dataset}'")
