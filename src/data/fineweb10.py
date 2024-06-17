@@ -3,6 +3,7 @@ import numpy as np
 import tiktoken
 from datasets import load_dataset, Dataset
 import os
+import shutil
 
 
 FINEWEB10_DATA_PATH = os.path.join(os.path.dirname(__file__), "datasets/fineweb10/")
@@ -44,8 +45,8 @@ def get_fineweb10_data(num_proc=40):
             num_proc=num_proc,
         )
 
-        
-
+        all_train_data = os.path.join(FINEWEB10_DATA_PATH, "train.bin")
+        all_val_data = os.path.join(FINEWEB10_DATA_PATH, "val.bin")
         # concatenate all the ids in each dataset into one large file we can use for training
         for split, dset in tokenized.items():
 
@@ -60,6 +61,7 @@ def get_fineweb10_data(num_proc=40):
                 foldername = os.path.join(FINEWEB10_DATA_PATH, dump)
                 os.makedirs(foldername, exist_ok=True)
                 filename = os.path.join(foldername, f"{split}.bin")
+                # filename = os.path.join(FINEWEB10_DATA_PATH, f"{dump}_{split}.bin")
 
                 dtype = np.uint16  # (can do since enc.max_token_value == 50256 is < 2**16)
                 arr = np.memmap(filename, dtype=dtype, mode="w+", shape=(arr_len,))
@@ -76,25 +78,23 @@ def get_fineweb10_data(num_proc=40):
                     arr[idx : idx + len(arr_batch)] = arr_batch
                     idx += len(arr_batch)
                 arr.flush()
-    breakpoint()
 
+                # add entry to concatenated train.bin and val.bin
+                if filename.endswith("train.bin"):
+                    with open(all_train_data, 'ab') as outfile:
+                        with open(os.path.join(FINEWEB10_DATA_PATH, filename), 'rb') as infile:
+                            shutil.copyfileobj(infile, outfile)
+                elif filename.endswith("val.bin"):
+                    with open(all_val_data, 'ab') as outfile:
+                        with open(os.path.join(FINEWEB10_DATA_PATH, filename), 'rb') as infile:
+                            shutil.copyfileobj(infile, outfile)
+    
+        train_data = np.memmap(all_train_data, dtype=np.uint16, mode="r")
+        val_data = np.memmap(all_val_data, dtype=np.uint16, mode="r")
 
-    dump_folder_names = os.listdir(FINEWEB10_DATA_PATH) 
-    # 95 dumps
+        breakpoint()
+        return {'train': train_data, 'val': val_data}
+    
 
-    # all_train_data = []
-    # all_val_data = []
-
-    # for dump_folder in dump_folder_names:
-    #     DUMP_PATH = os.path.join(FINEWEB10_DATA_PATH, dump_folder)
-    #     train_data = np.memmap(
-    #         os.path.join(DUMP_PATH, "train.bin"), dtype=np.uint16, mode="r",
-    #     )
-    #     val_data = np.memmap(
-    #         os.path.join(DUMP_PATH, "val.bin"), dtype=np.uint16, mode="r",
-    #     )
-
-    #     all_train_data.append(train_data)
-    #     all_val_data.append(val_data)
-
-    # return {"train": train_data, "val": val_data}
+# 9,318,992,613 training tokens and 1,036,331,430 validation tokens 
+# 95 dumps

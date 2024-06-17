@@ -7,7 +7,8 @@ from .wikitext import get_wikitext_data
 from .arxiv import get_arxiv_2000, get_arxiv_full
 from .openwebtext2 import get_openwebtext2_data
 from .slimpajama import get_slimpajama_data
-from .fineweb import get_fineweb10_data
+from .fineweb10 import get_fineweb10_data
+from .finewebmini import get_finewebmini_data
 
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
@@ -34,6 +35,8 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_slimpajama_data()
     if args.dataset == "fineweb10":
         return get_fineweb10_data()
+    if args.dataset == "finewebmini":
+        return get_finewebmini_data()
     else:
         raise NotImplementedError(f"Unknow dataset key '{args.dataset}'")
 
