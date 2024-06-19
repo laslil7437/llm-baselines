@@ -1,4 +1,4 @@
-# First version of fw10, with dump tokens included per example 
+# Second version of fw10, with dataset shuffled before tokenization
 from tqdm import tqdm
 import numpy as np
 import tiktoken
@@ -7,18 +7,21 @@ import os
 import shutil
 
 
-FINEWEB10_DATA_PATH = os.path.join(os.path.dirname(__file__), "datasets/fineweb10/")
+FINEWEB10shuffled_DATA_PATH = os.path.join(os.path.dirname(__file__), "datasets/fineweb10shuffled/")
 
 tknzr = tiktoken.get_encoding("gpt2")
 
-def get_fineweb10_data(num_proc=40):
+def get_fineweb10shuffled_data(num_proc=40):
 
-    if not os.path.exists(os.path.join(FINEWEB10_DATA_PATH, "train.bin")):
-        os.makedirs(FINEWEB10_DATA_PATH, exist_ok=True)
+    if not os.path.exists(os.path.join(FINEWEB10shuffled_DATA_PATH, "train.bin")):
+        os.makedirs(FINEWEB10shuffled_DATA_PATH, exist_ok=True)
         
         dataset = load_dataset("HuggingFaceFW/fineweb", name="sample-10BT")
         dataset = dataset.select_columns(["text", "dump"])
         print("----> dataset loaded")
+
+        dataset = dataset.shuffle(seed=2357)
+        print("----> dataset shuffled")
 
         split_dataset = dataset["train"].train_test_split(
             test_size=0.1, seed=2357, shuffle=True
@@ -60,7 +63,7 @@ def get_fineweb10_data(num_proc=40):
         # concatenate all the ids in each dataset into one large file we can use for training
         for split, dset in tokenized.items():
             arr_len = np.sum(dset["len"])
-            filename = os.path.join(FINEWEB10_DATA_PATH, f"{split}.bin")
+            filename = os.path.join(FINEWEB10shuffled_DATA_PATH, f"{split}.bin")
             dtype = np.uint16  # (can do since enc.max_token_value == 50256 is < 2**16)
             arr = np.memmap(filename, dtype=dtype, mode="w+", shape=(arr_len,))
             total_batches = min(1024, len(dset))
@@ -77,7 +80,7 @@ def get_fineweb10_data(num_proc=40):
                 idx += len(arr_batch)
             arr.flush()
 
-    return {'train': os.path.join(FINEWEB10_DATA_PATH, 'train.bin'), 'val': os.path.join(FINEWEB10_DATA_PATH, 'val.bin')}
+    return {'train': os.path.join(FINEWEB10shuffled_DATA_PATH, 'train.bin'), 'val': os.path.join(FINEWEB10shuffled_DATA_PATH, 'val.bin')}
 
 # 9,318,992,613 training tokens and 1,036,331,430 validation tokens = 10,355,324,043 total tokens (without counting dump tokens)
 # 9,344,323,311 training tokens and 1,039,147,285 validation tokens = 10,383,470,596 total tokens (counting dump tokens)
