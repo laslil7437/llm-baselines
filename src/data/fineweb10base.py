@@ -65,8 +65,6 @@ def get_fineweb10base_data(num_proc=40):
                 arr[idx : idx + len(arr_batch)] = arr_batch
                 idx += len(arr_batch)
             arr.flush()
-        
-    breakpoint()
 
     return {'train': os.path.join(FINEWEB10_DATA_PATH, 'train.bin'), 'val': os.path.join(FINEWEB10_DATA_PATH, 'val.bin')}
 

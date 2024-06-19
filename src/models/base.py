@@ -217,7 +217,7 @@ class GPTBase(nn.Module):
         no_decay = set()
         whitelist_weight_modules = (torch.nn.Linear,)
         # need to do import here to avoid circular import (since llama imports from base here)
-        from .utils import BLACKLIST_WEIGHT_MODULES
+        from .utils import BLACKLIST_WEIGHT_MODULES, BLACKLIST2_WEIGHT_MODULES
 
         for mn, m in self.named_modules():
             for pn, p in m.named_parameters():
@@ -233,6 +233,9 @@ class GPTBase(nn.Module):
                     decay.add(fpn)
                 elif pn.endswith("weight") and isinstance(m, BLACKLIST_WEIGHT_MODULES):
                     # weights of blacklist modules will NOT be weight decayed
+                    no_decay.add(fpn)
+                elif pn in BLACKLIST2_WEIGHT_MODULES:
+                    # weights of any other modules will also NOT be weight decayed
                     no_decay.add(fpn)
 
         # subtle: 'transformer.wte.weight' and 'lm_head.weight' are tied, so they
