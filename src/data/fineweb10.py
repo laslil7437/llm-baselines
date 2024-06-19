@@ -75,15 +75,8 @@ def get_fineweb10_data(num_proc=40):
                 arr[idx : idx + len(arr_batch)] = arr_batch
                 idx += len(arr_batch)
             arr.flush()
-        
-    train_data = np.memmap(
-        os.path.join(FINEWEB10_DATA_PATH, "train.bin"), dtype=np.uint16, mode="r"
-    )
-    val_data = np.memmap(
-        os.path.join(FINEWEB10_DATA_PATH, "val.bin"), dtype=np.uint16, mode="r"
-    )
 
-    return {'train': train_data, 'val': val_data}
+    return {'train': os.path.join(FINEWEB10_DATA_PATH, 'train.bin'), 'val': os.path.join(FINEWEB10_DATA_PATH, 'val.bin')}
 
 # 9,318,992,613 training tokens and 1,036,331,430 validation tokens = 10,355,324,043 total tokens (without counting dump tokens)
 # 9,344,323,311 training tokens and 1,039,147,285 validation tokens = 10,383,470,596 total tokens (counting dump tokens)

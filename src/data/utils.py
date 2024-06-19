@@ -4,31 +4,23 @@ import torch
 
 from .shakespeare import get_shakespeare_data
 from .wikitext import get_wikitext_data
-from .arxiv import get_arxiv_2000, get_arxiv_full
 from .openwebtext2 import get_openwebtext2_data
 from .slimpajama import get_slimpajama_data
 from .fineweb10 import get_fineweb10_data
 from .finewebmini import get_finewebmini_data
+from .fineweb10base import get_fineweb10base_data
 
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
-    """ Fetch the right dataset given by the args.dataset parameter. The logic for each dataset is
-     contained in its own python file. The expected format at the moment is a dictionary of np.memmap
-     containing two keys: 'train' and 'val', corresponding to the tokenized training and validation data. """
+    """Fetch the right dataset given by the args.dataset parameter. The logic for each dataset is
+    contained in its own python file. The expected format at the moment is a dictionary of np.memmap
+    containing two keys: 'train' and 'val', corresponding to the tokenized training and validation data.
+    This just returns a dictionary of the paths to the np.memmap objects, and does not load the data into memory.
+    """
     if args.dataset == 'wikitext':
         return get_wikitext_data()
     if args.dataset == "shakespeare-char":
         return get_shakespeare_data()
-    if args.dataset == "arxiv2000":
-        return get_arxiv_2000()
-    if args.dataset == "arxiv":
-        return get_arxiv_full()
-    if args.dataset == "arxiv+wiki":
-        arxiv_data = get_arxiv_full()
-        wiki_data = get_wikitext_data()
-        train_data = np.concatenate((arxiv_data['train'], wiki_data['train']))
-        val_data = np.concatenate((arxiv_data['val'], wiki_data['val']))
-        return {'train': train_data, 'val': val_data}
     if args.dataset == 'openwebtext2':
         return get_openwebtext2_data()
     if args.dataset == "slimpajama":
@@ -37,29 +29,30 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_fineweb10_data()
     if args.dataset == "finewebmini":
         return get_finewebmini_data()
+    if args.dataset == "fineweb10base":
+        return get_fineweb10base_data()
     else:
         raise NotImplementedError(f"Unknow dataset key '{args.dataset}'")
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, data, sequence_length):
+    def __init__(self, data_path, sequence_length):
         super().__init__()
-        self.data = data
+        self.data_path = data_path
         self.sequence_length = sequence_length
 
     def __len__(self):
-        total_length = len(self.data)
+        data = np.memmap(self.data_path, dtype=np.uint16, mode="r")
+        total_length = len(data)
         # chunk the data into sequences of length `sequence_length`
-        # NOTE: we discard the last remainding sequence if it's not of length `sequence_length`
+        # NOTE: we discard the last remaining sequence if it's not of length `sequence_length`
         return (total_length - 1) // self.sequence_length
 
     def __getitem__(self, idx):
+        data = np.memmap(self.data_path, dtype=np.uint16, mode="r")
         seq_length = self.sequence_length
         idx = idx * seq_length
-        x = torch.from_numpy((self.data[idx : idx + seq_length]).astype(np.int64))
-
-        y = torch.from_numpy(
-            (self.data[idx + 1 : idx + 1 + seq_length]).astype(np.int64)
-        )
+        x = torch.from_numpy((data[idx:idx + seq_length]).astype(np.int64))
+        y = torch.from_numpy((data[idx + 1:idx + seq_length + 1]).astype(np.int64))
         return x, y
 
 
@@ -89,6 +82,6 @@ def get_dataloader(data, sequence_length, batch_size, seed=0, distributed_backen
         dataset,
         sampler=sampler,
         batch_size=batch_size,
-        num_workers=4,
+        num_workers=16,
     )
     return loader, sampler

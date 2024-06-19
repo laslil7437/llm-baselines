@@ -48,8 +48,8 @@ def main(args):
     if args.data_in_ram:
         data = {'train': np.array(data['train']), 'val': np.array(data['val'])}
         
-    print(f"Num training tokens: {len(data['train'])}")
-    print(f"Num validation tokens: {len(data['val'])}")
+    print(f"Num training tokens: {len(np.memmap(data['train'], dtype=np.uint16, mode='r'))}")
+    print(f"Num validation tokens: {len(np.memmap(data['val'], dtype=np.uint16, mode='r'))}")
     
     model = get_model(args).to(args.device) # todo: take care of initializing the model if args.use_pretrained != 'none'
 
@@ -135,7 +135,7 @@ def main(args):
             scheduler_state_dict = checkpoint['scheduler']
             scheduler.load_state_dict(scheduler_state_dict)
 
-    if args.model in ['base', 'llama2']: # all train functions have the same interface
+    if args.model in ['base', 'llama2', 'gpt2dumps']: # all train functions have the same interface
         train = train_base
     else:
         raise NotImplementedError(f"No training method implemented for model type '{args.model}'.")
