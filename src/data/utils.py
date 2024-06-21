@@ -10,6 +10,7 @@ from .fineweb10 import get_fineweb10_data
 from .finewebmini import get_finewebmini_data
 from .fineweb10base import get_fineweb10base_data
 from .fineweb10shuffled import get_fineweb10shuffled_data
+from .fineweb10domains import get_fineweb10domains_data
 
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
@@ -34,6 +35,8 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_fineweb10base_data()
     if args.dataset == "fineweb10shuffled":
         return get_fineweb10shuffled_data()
+    if args.dataset == "fineweb10domains":
+        return get_fineweb10domains_data()
     else:
         raise NotImplementedError(f"Unknow dataset key '{args.dataset}'")
 
