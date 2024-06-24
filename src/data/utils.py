@@ -11,7 +11,7 @@ from .finewebmini import get_finewebmini_data
 from .fineweb10base import get_fineweb10base_data
 from .fineweb10shuffled import get_fineweb10shuffled_data
 from .fineweb10domains import get_fineweb10domains_data
-
+from .fw10baseunshuffled import get_fineweb10baseunshuffled_data
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
     """Fetch the right dataset given by the args.dataset parameter. The logic for each dataset is
@@ -37,8 +37,10 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_fineweb10shuffled_data()
     if args.dataset == "fineweb10domains":
         return get_fineweb10domains_data()
+    if args.dataset == "fw10baseunshuffled":
+        return get_fineweb10baseunshuffled_data()
     else:
-        raise NotImplementedError(f"Unknow dataset key '{args.dataset}'")
+        raise NotImplementedError(f"Unknown dataset key '{args.dataset}'")
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data_path, sequence_length):
