@@ -1,4 +1,5 @@
-# First version of fw10, with dump tokens included per example 
+# Dump tokens included per example, condensed version here
+
 from tqdm import tqdm
 import numpy as np
 import tiktoken
