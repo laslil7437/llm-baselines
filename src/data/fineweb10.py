@@ -8,7 +8,7 @@ import os
 import shutil
 
 
-FINEWEB10_DATA_PATH = os.path.join(os.path.dirname(__file__), "datasets/fineweb10-2/")
+FINEWEB10_DATA_PATH = os.path.join(os.path.dirname(__file__), "datasets/fineweb10/")
 
 tknzr = tiktoken.get_encoding("gpt2")
 
