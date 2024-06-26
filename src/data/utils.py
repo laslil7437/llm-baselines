@@ -13,6 +13,7 @@ from .fineweb10shuffled import get_fineweb10shuffled_data
 from .fineweb10domains import get_fineweb10domains_data
 from .fw10baseunshuffled import get_fineweb10baseunshuffled_data
 from .fineweb10eot import get_fineweb10eot_data
+from .fineweb10ddeot import get_fineweb10ddeot_data
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
     """Fetch the right dataset given by the args.dataset parameter. The logic for each dataset is
@@ -42,6 +43,8 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_fineweb10baseunshuffled_data()
     if args.dataset == "fineweb10eot":
         return get_fineweb10eot_data()
+    if args.dataset == "fineweb10ddeot":
+        return get_fineweb10ddeot_data()
     else:
         raise NotImplementedError(f"Unknown dataset key '{args.dataset}'")
 

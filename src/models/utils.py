@@ -3,6 +3,7 @@ from .llama import Llama, RMSNorm
 from .base import GPTBase, LayerNorm as BaseLayerNorm
 from .gpt2dumps import gpt2dumps, LayerNorm as GPT2DumpsLayerNorm
 from .gpt2domains import gpt2domains, LayerNorm as GPT2DomainsLayerNorm
+from .gpt2dd import gpt2dd, LayerNorm as GPT2DDLayerNorm
 
 
 BLACKLIST_WEIGHT_MODULES = (
@@ -27,6 +28,9 @@ def get_model(args):
         return model
     elif args.model == 'gpt2domains':
         model = gpt2domains(args)
+        return model
+    elif args.model == 'gpt2dd':
+        model = gpt2dd(args)
         return model
     else:
         raise KeyError(f"Unknown model '{args.model}'.")
