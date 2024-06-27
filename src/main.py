@@ -41,7 +41,6 @@ def main(args):
     torch.manual_seed(args.seed)
     random.seed(args.seed)
     np.random.seed(args.seed)
-    
     print(f"Loading dataset '{args.dataset}'")
     
     data = get_dataset(args) # data is a dict: {'train': train_tokenized, 'val': eval_tokenized}
@@ -135,7 +134,7 @@ def main(args):
             scheduler_state_dict = checkpoint['scheduler']
             scheduler.load_state_dict(scheduler_state_dict)
 
-    if args.model in ['base', 'llama2', 'gpt2dumps', 'gpt2domains']: # all train functions have the same interface
+    if args.model in ['base', 'llama2', 'gpt2dd']: # all train functions have the same interface
         train = train_base
     else:
         raise NotImplementedError(f"No training method implemented for model type '{args.model}'.")

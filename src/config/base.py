@@ -27,11 +27,14 @@ def parse_args(base_parser, args, namespace):
     parser.add_argument('--results_base_folder', default="./exps", type=str) 
     parser.add_argument('--grad_clip', default=0.0, type=float) # default value is 1.0 in NanoGPT
     # Dataset params
-    parser.add_argument('--dataset', default='slimpajama', choices=['slimpajama', 'wikitext', "shakespeare-char", 'openwebtext2', 'fineweb10', 'finewebmini', 'fineweb10base', 'fineweb10shuffled', 'fineweb10domains', 'fw10baseunshuffled', 'fineweb10eot', 'fineweb10ddeot'])
+    parser.add_argument('--dataset', default='slimpajama', choices=['slimpajama', 'wikitext', "shakespeare-char", 'openwebtext2', 'fineweb10', 'mini'])
+    parser.add_argument('--filename', default='fineweb10', type=str)
+    parser.add_argument('--fw_dumps', default=False, type=bool) # whether to use fineweb dumps or not
+    parser.add_argument('--fw_domains', default=False, type=bool) # whether to use fineweb domains or not
     parser.add_argument('--vocab_size', default=50304, type=int)
     parser.add_argument('--data_in_ram', action='store_true') # force the data to RAM, mostly useless except for openwebtext2 
     # Model params
-    parser.add_argument('--model', default='base', choices=['base', 'llama2', 'gpt2dumps', 'gpt2domains'])
+    parser.add_argument('--model', default='base', choices=['base', 'llama2', 'gpt2dd'])
     parser.add_argument('--use_pretrained', default="auto", type=none_or_str) # 'none', 'gpt-2' or a path to the pretraind model
     parser.add_argument('--dropout', default=0.0, type=float)
     parser.add_argument('--n_head', default=12, type=int)

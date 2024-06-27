@@ -9,6 +9,9 @@ import shutil
 from collections import defaultdict
 from urllib.parse import urlparse
 
+
+
+
 gpt2base = tiktoken.get_encoding("gpt2")
 dd_tknzr = tiktoken.Encoding(
             name = "gpt2_domains",
@@ -293,6 +296,7 @@ dd_tknzr = tiktoken.Encoding(
                 'CC-MAIN-2019-13':	50531,
             }
         )
+#************* potentially changes to get the encoding based on args
 
 def modify_data_domains(dataset):
     
@@ -324,27 +328,29 @@ def modify_data_domains(dataset):
     print("----> dataset modified")
     return dataset 
 
-def get_fineweb10_data(args, num_proc=40):
+def get_mini_data(args, num_proc=40):
     global FINEWEB10_DATA_PATH 
     FINEWEB10_DATA_PATH = os.path.join(os.path.dirname(__file__), f"datasets/{args.filename}/") 
-
     if not os.path.exists(os.path.join(FINEWEB10_DATA_PATH, "train.bin")):
         os.makedirs(FINEWEB10_DATA_PATH, exist_ok=True)
         
-        dataset = load_dataset("HuggingFaceFW/fineweb", name="sample-10BT")
+        dataset = load_dataset("HuggingFaceFW/fineweb", split="train",name="sample-10BT")
         dataset = dataset.select_columns(["text", "dump", "url"])
+        dataset = dataset.take(500)
         print("----> dataset loaded")
+        breakpoint()
 
         if args.fw_domains == True:
             dataset = modify_data_domains(dataset) 
 
-        split_dataset = dataset["train"].train_test_split(
-            test_size=0.1, seed=2357, shuffle=True
-        )
-        split_dataset["val"] = split_dataset.pop("test")
-        print("----> dataset split")
+        # split_dataset = dataset["train"].train_test_split(
+        #     test_size=0.1, seed=2357, shuffle=True
+        # )
+        # split_dataset["val"] = split_dataset.pop("test")
+        # print("----> dataset split")
 
         seq_length = args.sequence_length
+
 
         def process(example):
             ids = dd_tknzr.encode_ordinary(
@@ -356,15 +362,16 @@ def get_fineweb10_data(args, num_proc=40):
 
             ids.append(
                 dd_tknzr.encode(example["dump"], allowed_special="all")[0]                
-            )  # add dump token
+            )
             ids.append(
                 dd_tknzr.encode(example["url"], allowed_special="all")[0]
-            )  # add domain/url token 
+            )
+
             out = {"ids": ids, "len": len(ids)}
             return out
 
         # tokenize the dataset
-        tokenized = split_dataset.map(
+        tokenized = dataset.map(
             process,
             remove_columns=["text", "dump", "url"],
             desc="tokenizing the splits",
@@ -372,6 +379,7 @@ def get_fineweb10_data(args, num_proc=40):
         )
         print("----> dataset tokenized")
 
+        breakpoint()
         # concatenate all the ids in each dataset into one large file we can use for training
         for split, dset in tokenized.items():
             arr_len = np.sum(dset["len"])
@@ -391,11 +399,5 @@ def get_fineweb10_data(args, num_proc=40):
                 arr[idx : idx + len(arr_batch)] = arr_batch
                 idx += len(arr_batch)
             arr.flush()
+        breakpoint()
     return {'train': os.path.join(FINEWEB10_DATA_PATH, 'train.bin'), 'val': os.path.join(FINEWEB10_DATA_PATH, 'val.bin')}
-
-# 9,318,992,613 training tokens and 1,036,331,430 validation tokens = 10,355,324,043 total tokens (without counting dump tokens)
-# 9,344,323,311 training tokens and 1,039,147,285 validation tokens = 10,383,470,596 total tokens (counting dump tokens)
-# Note: 
-# 10,383,470,596 tokens / 512 tokens per sequence = 20,263,476 sequences
-#
-# 95 dumps

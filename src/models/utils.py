@@ -1,16 +1,12 @@
 import torch
 from .llama import Llama, RMSNorm
 from .base import GPTBase, LayerNorm as BaseLayerNorm
-from .gpt2dumps import gpt2dumps, LayerNorm as GPT2DumpsLayerNorm
-from .gpt2domains import gpt2domains, LayerNorm as GPT2DomainsLayerNorm
-from .gpt2dd import gpt2dd, LayerNorm as GPT2DDLayerNorm
-
+from .fwmodel import GPT2FineWebDD, LayerNorm as FWLayerNorm
 
 BLACKLIST_WEIGHT_MODULES = (
     torch.nn.LayerNorm,
     BaseLayerNorm,
-    GPT2DumpsLayerNorm,
-    GPT2DomainsLayerNorm,
+    FWLayerNorm,
     RMSNorm,
     torch.nn.Embedding,
 )
@@ -23,14 +19,8 @@ def get_model(args):
     elif args.model == 'llama2':
         model = Llama(args)
         return model
-    elif args.model == 'gpt2dumps':
-        model = gpt2dumps(args)
-        return model
-    elif args.model == 'gpt2domains':
-        model = gpt2domains(args)
-        return model
     elif args.model == 'gpt2dd':
-        model = gpt2dd(args)
+        model = GPT2FineWebDD(args)
         return model
     else:
         raise KeyError(f"Unknown model '{args.model}'.")

@@ -7,13 +7,7 @@ from .wikitext import get_wikitext_data
 from .openwebtext2 import get_openwebtext2_data
 from .slimpajama import get_slimpajama_data
 from .fineweb10 import get_fineweb10_data
-from .finewebmini import get_finewebmini_data
-from .fineweb10base import get_fineweb10base_data
-from .fineweb10shuffled import get_fineweb10shuffled_data
-from .fineweb10domains import get_fineweb10domains_data
-from .fw10baseunshuffled import get_fineweb10baseunshuffled_data
-from .fineweb10eot import get_fineweb10eot_data
-from .fineweb10ddeot import get_fineweb10ddeot_data
+from .Untitled import get_mini_data
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
     """Fetch the right dataset given by the args.dataset parameter. The logic for each dataset is
@@ -30,21 +24,9 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
     if args.dataset == "slimpajama":
         return get_slimpajama_data()
     if args.dataset == "fineweb10":
-        return get_fineweb10_data()
-    if args.dataset == "finewebmini":
-        return get_finewebmini_data()
-    if args.dataset == "fineweb10base":
-        return get_fineweb10base_data()
-    if args.dataset == "fineweb10shuffled":
-        return get_fineweb10shuffled_data()
-    if args.dataset == "fineweb10domains":
-        return get_fineweb10domains_data()
-    if args.dataset == "fw10baseunshuffled":
-        return get_fineweb10baseunshuffled_data()
-    if args.dataset == "fineweb10eot":
-        return get_fineweb10eot_data()
-    if args.dataset == "fineweb10ddeot":
-        return get_fineweb10ddeot_data()
+        return get_fineweb10_data(args)
+    if args.dataset == 'mini': 
+        return get_mini_data(args)
     else:
         raise NotImplementedError(f"Unknown dataset key '{args.dataset}'")
 

@@ -17,6 +17,7 @@ def get_fineweb10base_data(num_proc=40):
         
         dataset = load_dataset("HuggingFaceFW/fineweb", name="sample-10BT")
         dataset = dataset.select_columns(["text"])
+        
         print("----> dataset loaded")
 
         split_dataset = dataset["train"].train_test_split(
