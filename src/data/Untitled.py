@@ -336,9 +336,8 @@ def get_mini_data(args, num_proc=40):
         
         dataset = load_dataset("HuggingFaceFW/fineweb", split="train",name="sample-10BT")
         dataset = dataset.select_columns(["text", "dump", "url"])
-        dataset = dataset.take(500)
+        dataset = dataset.take(5)
         print("----> dataset loaded")
-        breakpoint()
 
         if args.fw_domains == True:
             dataset = modify_data_domains(dataset) 
@@ -351,7 +350,6 @@ def get_mini_data(args, num_proc=40):
 
         seq_length = args.sequence_length
 
-
         def process(example):
             ids = dd_tknzr.encode_ordinary(
                 example["text"]
@@ -360,12 +358,44 @@ def get_mini_data(args, num_proc=40):
                 dd_tknzr.eot_token
             )  # add the end of text token, e.g. 50256 for gpt2 bpe
 
-            ids.append(
-                dd_tknzr.encode(example["dump"], allowed_special="all")[0]                
-            )
-            ids.append(
-                dd_tknzr.encode(example["url"], allowed_special="all")[0]
-            )
+            if args.token_placement == 'end':
+                if args.fw_dumps == True:
+                    ids.append(
+                        dd_tknzr.encode(example["dump"], allowed_special="all")[0]                
+                    )  # add dump token at end
+                if args.fw_domains == True:
+                    ids.append(
+                        dd_tknzr.encode(example["url"], allowed_special="all")[0]
+                    )  # add domain/url token at end
+            if args.token_placement == 'mid':
+                if args.fw_dumps == True:
+                    if args.fw_domains == True:
+                        # add both tokens throughout
+                        for i in range(0, len(ids), seq_length):
+                            ids.insert(i, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                            ids.insert(i+1, dd_tknzr.encode(example["url"], allowed_special="all")[0])
+                    else:
+                        print("length of ids: ", len(ids))
+                        # add dump token throughout
+                        for i in range(0, len(ids), seq_length):
+                            ids.insert(i, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                            print("inserted at position i: ", i)
+                else:
+                    # add domain token throughout
+                    for i in range(0, len(ids), seq_length):
+                        ids.insert(i, dd_tknzr.encode(example["url"], allowed_special="all")[0])
+            if args.token_placement == 'start':
+                if args.fw_dumps == True:
+                    if args.fw_domains == True:
+                        # add both tokens at start
+                        ids.insert(0, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                        ids.insert(1, dd_tknzr.encode(example["url"], allowed_special="all")[0])
+                    else:
+                        # add dump token at start
+                        ids.insert(0, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                else:
+                    # add domain token at start
+                    ids.insert(0, dd_tknzr.encode(example["url"], allowed_special="all")[0])
 
             out = {"ids": ids, "len": len(ids)}
             return out
