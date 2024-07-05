@@ -390,6 +390,22 @@ def get_fineweb10_data(args, num_proc=40):
                 else:
                     # add domain token at start
                     ids.insert(0, dd_tknzr.encode(example["url"], allowed_special="all")[0])
+            if args.token_placement == 'both':
+                if args.fw_dumps == True:
+                    if args.fw_domains == True:
+                        # add both tokens at start and end
+                        ids.insert(0, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                        ids.insert(1, dd_tknzr.encode(example["url"], allowed_special="all")[0])
+                        ids.append(dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                        ids.append(dd_tknzr.encode(example["url"], allowed_special="all")[0])
+                    else:
+                        # add dump token at start and end
+                        ids.insert(0, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                        ids.append(dd_tknzr.encode(example["dump"], allowed_special="all")[0])
+                else:
+                    # add domain token at start and end
+                    ids.insert(0, dd_tknzr.encode(example["url"], allowed_special="all")[0])
+                    ids.append(dd_tknzr.encode(example["url"], allowed_special="all")[0])
 
             out = {"ids": ids, "len": len(ids)}
             return out
