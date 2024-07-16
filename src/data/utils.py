@@ -8,6 +8,7 @@ from .openwebtext2 import get_openwebtext2_data
 from .slimpajama import get_slimpajama_data
 from .fineweb10 import get_fineweb10_data
 from .Untitled import get_mini_data
+from .fw10domains import get_fw10domain_data
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
     """Fetch the right dataset given by the args.dataset parameter. The logic for each dataset is
@@ -27,6 +28,8 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_fineweb10_data(args)
     if args.dataset == 'mini': 
         return get_mini_data(args)
+    if args.dataset == 'fw10domains':
+        return get_fw10domain_data(args)
     else:
         raise NotImplementedError(f"Unknown dataset key '{args.dataset}'")
 

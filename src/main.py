@@ -134,7 +134,7 @@ def main(args):
             scheduler_state_dict = checkpoint['scheduler']
             scheduler.load_state_dict(scheduler_state_dict)
 
-    if args.model in ['base', 'llama2', 'gpt2dd', 'fwmasking']: # all train functions have the same interface
+    if args.model in ['base', 'llama2', 'gpt2dd', 'fwmasking', 'fwmask2', 'fwdomainmask']: # all train functions have the same interface
         train = train_base
     else:
         raise NotImplementedError(f"No training method implemented for model type '{args.model}'.")
