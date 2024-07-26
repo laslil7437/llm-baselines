@@ -113,7 +113,7 @@ class Block(nn.Module):
         return x
     
 
-class GPT2FWMasking(nn.Module):
+class GPT2FWClassifierModel(nn.Module):
     # GPT-2 for the FineWeb10 dataset that includes dump and domain special tokens
     def __init__(self, config):
         super().__init__()

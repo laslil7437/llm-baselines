@@ -9,6 +9,8 @@ from .slimpajama import get_slimpajama_data
 from .fineweb10 import get_fineweb10_data
 from .Untitled import get_mini_data
 from .fw10domains import get_fw10domain_data
+from .fwtime import get_fwtime_data
+from .fwclassifier import get_fwclassifier_data
 
 def get_dataset(args) -> Dict[str, np.ndarray]:
     """Fetch the right dataset given by the args.dataset parameter. The logic for each dataset is
@@ -30,6 +32,10 @@ def get_dataset(args) -> Dict[str, np.ndarray]:
         return get_mini_data(args)
     if args.dataset == 'fw10domains':
         return get_fw10domain_data(args)
+    if args.dataset == 'fwtime':
+        return get_fwtime_data(args)
+    if args.dataset == 'fwclassifier':
+        return get_fwclassifier_data(args)
     else:
         raise NotImplementedError(f"Unknown dataset key '{args.dataset}'")
 

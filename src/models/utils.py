@@ -5,6 +5,7 @@ from .fwmodel import GPT2FineWebDD, LayerNorm as FWLayerNorm
 from .fwmasking import GPT2FWMasking, LayerNorm as FWMaskingLayerNorm
 from .fwmask2 import GPT2FWMask2, LayerNorm as FWMask2LayerNorm
 from .fwdomainmask import GPT2FWDomainMasking, LayerNorm as FWDomainMaskingLayerNorm
+from .fwclassifier import GPT2FWClassifierModel, LayerNorm as FWClassifierLayerNorm
 
 BLACKLIST_WEIGHT_MODULES = (
     torch.nn.LayerNorm,
@@ -13,6 +14,7 @@ BLACKLIST_WEIGHT_MODULES = (
     FWMaskingLayerNorm,
     FWMask2LayerNorm,
     FWDomainMaskingLayerNorm,
+    FWClassifierLayerNorm,
     RMSNorm,
     torch.nn.Embedding,
 )
@@ -36,6 +38,9 @@ def get_model(args):
         return model
     elif args.model == 'fwdomainmask':
         model = GPT2FWDomainMasking(args)
+        return model
+    elif args.model == 'fwclassifier':
+        model = GPT2FWClassifier(args)
         return model
     else:
         raise KeyError(f"Unknown model '{args.model}'.")
