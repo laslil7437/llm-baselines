@@ -8,9 +8,12 @@ import os
 import shutil
 from collections import defaultdict
 from urllib.parse import urlparse
+from transformers import pipeline, AutoTokenizer
 
-
-
+# classifier
+model_name = 'cffl/bert-base-styleclassification-subjective-neutral'
+classifier_tknzr = AutoTokenizer.from_pretrained(model_name)
+classify = pipeline(task='text-classification', model=model_name, top_k=1)
 
 gpt2base = tiktoken.get_encoding("gpt2")
 dd_tknzr = tiktoken.Encoding(
@@ -294,6 +297,8 @@ dd_tknzr = tiktoken.Encoding(
                 'CC-MAIN-2023-50':	50529,
                 'CC-MAIN-2024-10':	50530,
                 'CC-MAIN-2019-13':	50531,
+                'SUBJECTIVE':	50532,
+                'NEUTRAL':	50533,
             }
         )
 #************* potentially changes to get the encoding based on args
@@ -328,6 +333,7 @@ def modify_data_domains(dataset):
     print("----> dataset modified")
     return dataset 
 
+
 def get_mini_data(args, num_proc=40):
     global FINEWEB10_DATA_PATH 
     FINEWEB10_DATA_PATH = os.path.join(os.path.dirname(__file__), f"datasets/{args.filename}/") 
@@ -342,11 +348,15 @@ def get_mini_data(args, num_proc=40):
         if args.fw_domains == True:
             dataset = modify_data_domains(dataset) 
 
-        # split_dataset = dataset["train"].train_test_split(
-        #     test_size=0.1, seed=2357, shuffle=True
-        # )
-        # split_dataset["val"] = split_dataset.pop("test")
-        # print("----> dataset split")
+        # classification
+        def truncate_classify(example):
+            tokens = classifier_tknzr(example["text"], truncation=True, max_length=512)
+            truncated_text = classifier_tknzr.decode(tokens['input_ids'], skip_special_tokens=True)
+            label = classify(truncated_text)[0][0]['label']
+            example["label"] = label
+            return example
+        dataset = dataset.map(truncate_classify)
+        print("----> dataset truncated and labeled")
 
         seq_length = args.sequence_length
 
@@ -358,44 +368,15 @@ def get_mini_data(args, num_proc=40):
                 dd_tknzr.eot_token
             )  # add the end of text token, e.g. 50256 for gpt2 bpe
 
-            if args.token_placement == 'end':
-                if args.fw_dumps == True:
-                    ids.append(
-                        dd_tknzr.encode(example["dump"], allowed_special="all")[0]                
-                    )  # add dump token at end
-                if args.fw_domains == True:
-                    ids.append(
-                        dd_tknzr.encode(example["url"], allowed_special="all")[0]
-                    )  # add domain/url token at end
-            if args.token_placement == 'mid':
-                if args.fw_dumps == True:
-                    if args.fw_domains == True:
-                        # add both tokens throughout
-                        for i in range(0, len(ids), seq_length):
-                            ids.insert(i, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
-                            ids.insert(i+1, dd_tknzr.encode(example["url"], allowed_special="all")[0])
-                    else:
-                        print("length of ids: ", len(ids))
-                        # add dump token throughout
-                        for i in range(0, len(ids), seq_length):
-                            ids.insert(i, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
-                            print("inserted at position i: ", i)
-                else:
-                    # add domain token throughout
-                    for i in range(0, len(ids), seq_length):
-                        ids.insert(i, dd_tknzr.encode(example["url"], allowed_special="all")[0])
             if args.token_placement == 'start':
                 if args.fw_dumps == True:
                     if args.fw_domains == True:
                         # add both tokens at start
                         ids.insert(0, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
                         ids.insert(1, dd_tknzr.encode(example["url"], allowed_special="all")[0])
-                    else:
-                        # add dump token at start
-                        ids.insert(0, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
-                else:
-                    # add domain token at start
-                    ids.insert(0, dd_tknzr.encode(example["url"], allowed_special="all")[0])
+
+            # add the label token at start
+            ids.insert(2, dd_tknzr.encode(example["label"], allowed_special="all")[0])
 
             out = {"ids": ids, "len": len(ids)}
             return out
@@ -403,7 +384,7 @@ def get_mini_data(args, num_proc=40):
         # tokenize the dataset
         tokenized = dataset.map(
             process,
-            remove_columns=["text", "dump", "url"],
+            remove_columns=["text", "dump", "url", "label"],
             desc="tokenizing the splits",
             num_proc=num_proc,
         )

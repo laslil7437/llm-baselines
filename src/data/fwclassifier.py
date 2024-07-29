@@ -7,10 +7,13 @@ import shutil
 from collections import defaultdict
 from urllib.parse import urlparse
 import fasttext
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer
 
+# classifier
+model_name = 'cffl/bert-base-styleclassification-subjective-neutral'
+classifier_tknzr = AutoTokenizer.from_pretrained(model_name)
+classify = pipeline(task='text-classification', model=model_name, top_k=1)
 
-classify = pipeline(task='text-classification', model='cffl/bert-base-styleclassification-subjective-neutral', return_all_scores=False)
 gpt2base = tiktoken.get_encoding("gpt2")
 dd_tknzr = tiktoken.Encoding(
             name = "gpt2_domains",
@@ -340,6 +343,16 @@ def get_fwclassifier_data(args, num_proc=40):
         print("----> dataset loaded")
 
         dataset = modify_data_domains(dataset) 
+        
+        # classification
+        def truncate_classify(example):
+            tokens = classifier_tknzr(example["text"], truncation=True, max_length=512)
+            truncated_text = classifier_tknzr.decode(tokens['input_ids'], skip_special_tokens=True)
+            label = classify(truncated_text)[0][0]['label']
+            example["label"] = label
+            return example
+        dataset = dataset.map(truncate_classify)
+        print("----> dataset truncated and labeled")
 
         split_dataset = dataset["train"].train_test_split(
             test_size=0.1, seed=2357, shuffle=True
@@ -358,13 +371,8 @@ def get_fwclassifier_data(args, num_proc=40):
             ids.insert(0, dd_tknzr.encode(example["dump"], allowed_special="all")[0])
             ids.insert(1, dd_tknzr.encode(example["url"], allowed_special="all")[0])
 
-            # use classifier and add the label token at start
-            # delete newlines and double quotes
-            # text = " ".join(example["text"].strip().split("\n"))
-            # text = text.replace('"', "")
-            # label = classify(text)[0]['label']
-            label = classify(example["text"])[0]['label']
-            ids.insert(2, dd_tknzr.encode(label, allowed_special="all")[0])
+            # add the label token at start
+            ids.insert(2, dd_tknzr.encode(example["label"], allowed_special="all")[0])
             
             out = {"ids": ids, "len": len(ids)}
             return out
@@ -372,7 +380,7 @@ def get_fwclassifier_data(args, num_proc=40):
         # tokenize the dataset
         tokenized = split_dataset.map(
             process,
-            remove_columns=["text", "dump", "url"],
+            remove_columns=["text", "dump", "url", "label"],
             desc="tokenizing the splits",
             num_proc=num_proc,
         )
@@ -398,10 +406,3 @@ def get_fwclassifier_data(args, num_proc=40):
                 idx += len(arr_batch)
             arr.flush()
     return {'train': os.path.join(FINEWEB10_DATA_PATH, 'train.bin'), 'val': os.path.join(FINEWEB10_DATA_PATH, 'val.bin')}
-
-# 9,318,992,613 training tokens and 1,036,331,430 validation tokens = 10,355,324,043 total tokens (without counting dump tokens)
-# 9,344,323,311 training tokens and 1,039,147,285 validation tokens = 10,383,470,596 total tokens (counting dump tokens)
-# Note: 
-# 10,383,470,596 tokens / 512 tokens per sequence = 20,263,476 sequences
-#
-# 95 dumps
